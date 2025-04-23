@@ -24,7 +24,7 @@ app.get('/api/flavors', async (req, res) => {
 }
 )
 app.get('/api/flavors/:id', async (req, res) => {
-    const id = req.params.id
+    const { id }= req.params.id
     try {
         const result = await client.query('SELECT * FROM flavors WHERE id = $1', [id])
         if (result.rows.length === 0) {
