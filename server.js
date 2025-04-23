@@ -1,12 +1,21 @@
 const express = require('express')
 const pg = require('pg')
 const { Client } = pg
-const client = new Client()
-
+const client = new Client({
+    user: 'postgres',
+    host: 'localhost',
+    database: 'postgres',
+    password: '',
+    port: 5432,
+})
 const app = express()
-const port = 5432
+const port = 3000
 app.use(express.json())
 
+app.get('/', (req, res) => {
+    res.send('Hello World!')
+}
+)
 
 app.get('/api/flavors', async (req, res) => {
         const result = await client.query('SELECT * FROM flavors')
@@ -29,11 +38,21 @@ app.get('/api/flavors/:id', async (req, res) => {
     }
 }
 )
+app.post('/api/flavors', async (req, res) => {
+    const { name, is_favorite } = req.body
+    try {
+        const result = await client.query('INSERT INTO flavors (name, is_favorite) VALUES ($1, $2) RETURNING *', [name, is_favorite])
+        res.status(201).json(result.rows[0])
+    } catch (err) {
+        console.error(err)
+        res.status(500).send('Error creating flavor')
+    }
+})
 app.put('/api/flavors/:id', async (req, res) => {
     const id = req.params.id
-    const { name, description } = req.body
+    const { name, is_favorite } = req.body
     try {
-        const result = await client.query('UPDATE flavors SET name = $1, description = $2 WHERE id = $3 RETURNING *', [name, description, id])
+        const result = await client.query('UPDATE flavors SET name = $1, description = $2 WHERE id = $3 RETURNING *', [name, is_favorite, id])
         if (result.rows.length === 0) {
             res.status(404).send('Flavor not found')
         } else {
